@@ -19,7 +19,7 @@ function Customers() {
   const [editCustomer, setEditCustomer] = useState<CustomerALL | null>(null);
   const [deleteCustomerId, setDeleteCustomerId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
-
+  const [dataLoading, setdataLoading] = useState(false);
   /////////////////////////Filter Customer///////////////
 
   const FilterCustomers = customers.filter((customer) => {
@@ -70,12 +70,35 @@ function Customers() {
     if (editCustomarId === null) {
       return;
     }
-    fetch(`http://localhost:5000/api/customers/${editCustomarId}`)
-      .then((response) => response.json())
-      .then((data) => {
-        setEditCustomer(data);
+
+    const fetchSingleCustomer = async () => {
+      try {
+        setdataLoading(true);
+        setEditCustomer(null);
         setShowForm(true);
-      });
+
+        const response = await fetch(
+          `http://localhost:5000/api/customers/${editCustomarId}`,
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch customer");
+        }
+
+        const data = await response.json();
+
+        // একটু loading দেখানোর জন্য
+        await new Promise((resolve) => setTimeout(resolve, 600));
+
+        setEditCustomer(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setdataLoading(false);
+      }
+    };
+
+    fetchSingleCustomer();
   }, [editCustomarId]);
 
   //////////////fetch All Customar
@@ -261,7 +284,7 @@ function Customers() {
             <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl animate-[modalIn_0.25s_ease-out]">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-slate-900">
-                  {editCustomer ? "Edit Customer" : "Add Customar"}
+                  {editCustomarId !== null ? "Edit Customer" : "Add Customar"}
                 </h2>
 
                 <button
@@ -278,10 +301,22 @@ function Customers() {
               </div>
 
               <div className="mt-6">
-                <AddCustomer
-                  onSuccess={handleAddCustomers}
-                  customer={editCustomer ?? undefined}
-                />
+                {dataLoading ? (
+                  <div className="flex min-h-80 items-center justify-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-sky-600"></div>
+
+                      <p className="text-sm text-slate-500">
+                        Loading customer...
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <AddCustomer
+                    onSuccess={handleAddCustomers}
+                    customer={editCustomer ?? undefined}
+                  />
+                )}
               </div>
             </div>
           </div>
