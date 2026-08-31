@@ -6,6 +6,7 @@ import DashboardLayout from "./components/layout/DashboardLayout";
 import Services from "./pages/services/Services";
 import Payments from "./pages/payment/Payments";
 import Settings from "./pages/settings/Settings";
+import Allservices from "./pages/services/Allservices";
 function App() {
   return (
     <Routes>
@@ -13,6 +14,7 @@ function App() {
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboard/customers" element={<Customers />} />
+        <Route path="/dashboard/allservices" element={<Allservices />} />
         <Route path="/dashboard/services" element={<Services />} />
         <Route path="/dashboard/payments" element={<Payments />} />
         <Route path="/dashboard/settings" element={<Settings />} />

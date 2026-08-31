@@ -4,6 +4,7 @@ import {
     BriefcaseBusiness,
     CreditCard,
     Settings,
+    FileText
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 const MenuItems = [
@@ -18,6 +19,12 @@ const MenuItems = [
         label: "Customers",
         Icon: Users,
         path: "/dashboard/customers"
+    },
+    {
+        id: "allservices",
+        label: "All Services",
+        Icon: FileText,
+        path: "/dashboard/allservices"
     },
     {
         id: "services",

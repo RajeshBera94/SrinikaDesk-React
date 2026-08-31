@@ -1,6 +1,7 @@
 const express = require("express");
 const db = require("./db");
 const customarRoutes = require("./routes/customers");
+const serviceRoutes = require("./routes/service");
 const cors = require("cors");
 const path = require("path");
 
@@ -9,7 +10,12 @@ app.use(cors());
 const PORT = 5000;
 
 app.use(express.json());
+
+
 app.use("/api/customers", customarRoutes);
+app.use("/api/service", serviceRoutes);
+
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {
