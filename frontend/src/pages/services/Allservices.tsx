@@ -9,71 +9,50 @@ type Service = {
   badge: "NEW" | "HOT" | null;
   sort_order: number;
   status: number;
+  url:string
 };
 
 type ServiceType = "parent" | "child";
 
 const AllServices = () => {
   const [services, setServices] = useState<Service[]>([]);
-
   const [children, setChildren] = useState<Record<number, Service[]>>({});
-
   const [openService, setOpenService] = useState<number | null>(null);
-
   const [loading, setLoading] = useState(true);
   const [loadingChildren, setLoadingChildren] = useState<number | null>(null);
-
   const [error, setError] = useState("");
-
   // ---------------------------------------------
   // Add Modal
   // ---------------------------------------------
-
   const [showAddModal, setShowAddModal] = useState(false);
-
   const [serviceType, setServiceType] = useState<ServiceType>("parent");
-
   const [serviceName, setServiceName] = useState("");
-
   const [parentId, setParentId] = useState("");
-
   const [icon, setIcon] = useState("FileText");
-
+  const [serviceUrl, setServiceUrl] = useState("");
   const [badge, setBadge] = useState("");
-
   const [sortOrder, setSortOrder] = useState("");
-
   const [status, setStatus] = useState("1");
-
   const [editService, setEditService] = useState<Service | null>(null);
-
   const [saving, setSaving] = useState(false);
-
   const [deleteService, setDeleteService] = useState<Service | null>(null);
-
   const [deleting, setDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [iconFile, setIconFile] = useState<File | null>(null);
 
   //////////////openEdit Form
 
   const handleOpenEditModal = (service: Service) => {
     setEditService(service);
-
     setServiceType(service.parent_id === null ? "parent" : "child");
-
     setServiceName(service.name);
-
     setParentId(service.parent_id ? String(service.parent_id) : "");
-
     setIcon(service.icon || "FileText");
-
     setBadge(service.badge || "");
-
     setSortOrder(String(service.sort_order ?? 0));
-
     setStatus(String(service.status ?? 1));
-
     setShowAddModal(true);
+    setServiceUrl(service.url || "")
   };
 
   // ---------------------------------------------
@@ -173,6 +152,7 @@ const AllServices = () => {
   const handleOpenAddModal = () => {
     resetAddForm();
     setShowAddModal(true);
+    setIconFile(null);
   };
 
   // ---------------------------------------------
@@ -182,6 +162,8 @@ const AllServices = () => {
   const handleCloseAddModal = () => {
     setShowAddModal(false);
     resetAddForm();
+    setEditService(null);
+    setIconFile(null);
   };
 
   // ---------------------------------------------
@@ -194,30 +176,51 @@ const AllServices = () => {
     try {
       setSaving(true);
 
+      const formData = new FormData();
+
+      formData.append("name", serviceName);
+
+      formData.append(
+        "parent_id",
+        serviceType === "child" ? String(Number(parentId)) : "",
+      );
+
+      formData.append("badge", badge || "");
+
+      formData.append(
+        "sort_order",
+        sortOrder === "" ? "0" : String(Number(sortOrder)),
+      );
+
+      formData.append("status", String(Number(status)));
+
+      formData.append("url", serviceType === "child" ? serviceUrl : "");
+
+      // -----------------------------------------
+      // Icon file
+      // -----------------------------------------
+
+      if (iconFile) {
+        formData.append("icon", iconFile);
+      }
+
+      // -----------------------------------------
+      // URL
+      // -----------------------------------------
+
       const url = editService
         ? `http://localhost:5000/api/service/${editService.id}`
         : "http://localhost:5000/api/service";
 
       const method = editService ? "PUT" : "POST";
 
+      // -----------------------------------------
+      // Request
+      // -----------------------------------------
+
       const response = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: serviceName,
-
-          parent_id: serviceType === "child" ? Number(parentId) : null,
-
-          icon,
-
-          badge: badge || null,
-
-          sort_order: sortOrder === "" ? 0 : Number(sortOrder),
-
-          status: Number(status),
-        }),
+        body: formData,
       });
 
       const data = await response.json();
@@ -226,15 +229,15 @@ const AllServices = () => {
         throw new Error(data.message || "Failed to save service");
       }
 
-      // -------------------------------
+      // -----------------------------------------
       // Refresh parent services
-      // -------------------------------
+      // -----------------------------------------
 
       await fetchServices();
 
-      // -------------------------------
+      // -----------------------------------------
       // Refresh children
-      // -------------------------------
+      // -----------------------------------------
 
       if (editService?.parent_id) {
         await fetchChildren(editService.parent_id);
@@ -245,6 +248,12 @@ const AllServices = () => {
 
         setOpenService(Number(parentId));
       }
+
+      // -----------------------------------------
+      // Reset
+      // -----------------------------------------
+
+      setIconFile(null);
 
       handleCloseAddModal();
     } catch (error) {
@@ -658,29 +667,44 @@ const AllServices = () => {
                   </select>
                 </div>
               )}
+              {serviceType === "child" && (
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">
+                    Service Link
+                  </label>
+
+                  <input
+                    type="url"
+                    value={serviceUrl}
+                    onChange={(e) => setServiceUrl(e.target.value)}
+                    placeholder="https://example.com"
+                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  />
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 {/* Icon */}
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  <label className="mb-1 block text-sm font-medium text-slate-700">
                     Icon
                   </label>
 
-                  <select
-                    value={icon}
-                    onChange={(e) => setIcon(e.target.value)}
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-                  >
-                    <option value="FileText">File Text</option>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/svg+xml,image/x-icon"
+                    onChange={(e) => {
+                      setIconFile(e.target.files?.[0] || null);
+                    }}
+                    className="block w-full cursor-pointer rounded-md border border-slate-300 bg-white text-sm text-slate-600 file:mr-3 file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
+                  />
 
-                    <option value="Image">Image</option>
-
-                    <option value="IdCard">ID Card</option>
-
-                    <option value="Landmark">Landmark</option>
-
-                    <option value="ScanLine">Scan Line</option>
-                  </select>
+                  {iconFile && (
+                    <p className="mt-1 text-xs text-slate-500">
+                      Selected: {iconFile.name}
+                    </p>
+                  )}
                 </div>
 
                 {/* Badge */}

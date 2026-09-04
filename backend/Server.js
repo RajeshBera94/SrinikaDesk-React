@@ -11,10 +11,8 @@ const PORT = 5000;
 
 app.use(express.json());
 
-
 app.use("/api/customers", customarRoutes);
 app.use("/api/service", serviceRoutes);
-
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 

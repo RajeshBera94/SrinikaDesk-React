@@ -1,4 +1,11 @@
-import { FileText, Image, IdCard, Landmark, ScanLine } from "lucide-react";
+import {
+  FileText,
+  Image,
+  IdCard,
+  Landmark,
+  ScanLine,
+  ExternalLink,
+} from "lucide-react";
 import { useEffect, useRef, useState, type ElementType } from "react";
 
 type Service = {
@@ -301,10 +308,8 @@ const Services = () => {
     onClick?: () => void;
     active?: boolean;
   }) => {
-    const Icon =
-      typeof service.icon === "string"
-        ? (iconMap[service.icon] ?? FileText)
-        : (service.icon ?? FileText);
+    const isUploadedIcon =
+      typeof service.icon === "string" && service.icon.startsWith("/uploads/");
 
     const hasChildren =
       "children" in service &&
@@ -319,25 +324,25 @@ const Services = () => {
           group
           relative
           flex
-          min-h-28
+          min-h-40
           w-full
           flex-col
           items-center
           justify-center
-          rounded-lg
+          rounded-3xl
           border
           border-slate-200
           bg-white
           p-4
           text-center
           shadow-sm
-          transition-all
+          transition
           duration-200
-          hover:-translate-y-0.5
+          hover:-translate-y-1
           hover:border-sky-300
-          hover:shadow-md
+          hover:shadow-xl
           cursor-pointer
-          ${active ? "border-sky-300 shadow-md" : ""}
+          ${active ? "border-sky-500 shadow-md" : ""}
         `}
       >
         {/* Badge */}
@@ -352,23 +357,36 @@ const Services = () => {
 
         <div
           className={`
-            mb-3
-            flex
-            h-11
-            w-11
-            items-center
-            justify-center
-            rounded-lg
-            bg-sky-50
-            text-sky-600
-            transition-colors
-            duration-200
-            group-hover:bg-sky-600
-            group-hover:text-white
-            ${active ? "bg-sky-600 text-white" : ""}
-          `}
+    mb-3
+    flex
+    h-100%
+    w-100%
+    items-center
+    justify-center
+    rounded-lg
+    text-sky-600
+    transition-colors
+    duration-200
+    
+    ${active ? "text-white" : ""}
+  `}
         >
-          <Icon size={23} strokeWidth={1.8} />
+          {isUploadedIcon ? (
+            <img
+              src={`http://localhost:5000${service.icon}`}
+              alt={service.name}
+              className="h-20 w-35 object-contain"
+            />
+          ) : (
+            (() => {
+              const Icon =
+                typeof service.icon === "string"
+                  ? (iconMap[service.icon] ?? FileText)
+                  : (service.icon ?? FileText);
+
+              return <Icon size={23} strokeWidth={1.8} />;
+            })()
+          )}
         </div>
 
         {/* Name */}
@@ -422,7 +440,7 @@ const Services = () => {
         `}
       >
         <div className="min-h-0 overflow-hidden">
-          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-4 pb-10">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-base font-semibold text-slate-800">
                 {service.name} Services
@@ -444,31 +462,21 @@ const Services = () => {
                 No services available.
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3">
                 {serviceChildren.map((child) => (
                   <button
                     key={child.id}
                     type="button"
                     className="
-                      rounded-md
-                      border
-                      border-slate-200
-                      bg-white
-                      px-4
-                      py-3
-                      text-sm
-                      font-medium
-                      text-slate-700
-                      transition-all
-                      duration-200
-                      hover:-translate-y-0.5
-                      hover:border-sky-300
-                      hover:text-sky-600
-                      hover:shadow-sm
-                      cursor-pointer
-                    "
+                    group
+                     flex w-full items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:border-sky-300 hover:text-sky-600 hover:shadow-sm cursor-pointer"
                   >
-                    {child.name}
+                    <ExternalLink
+                      size={18}
+                      strokeWidth={1.8}
+                      className="shrink-0 text-slate-400 transition-colors group-hover:text-sky-600"
+                    />
+                    <span className="min-w-0 truncate">{child.name}</span>
                   </button>
                 ))}
               </div>
